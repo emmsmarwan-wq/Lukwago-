@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Customer food order at Papaz Spot",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order",
+          "maxLength": 64
+        },
+        "orderMode": {
+          "type": "string",
+          "enum": ["dine-in", "takeaway", "delivery"],
+          "description": "Mode of order service"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer's full name",
+          "maxLength": 100
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Ugandan mobile number for order verification and mobile money",
+          "maxLength": 25
+        },
+        "tableNumber": {
+          "type": "string",
+          "description": "Table or booth number for dine-in orders",
+          "maxLength": 20
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Street address or landmark for delivery",
+          "maxLength": 250
+        },
+        "deliveryZone": {
+          "type": "string",
+          "description": "Kampala delivery division/neighbourhood",
+          "maxLength": 100
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Calculated delivery fee in UGX"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Special chef preparation instructions",
+          "maxLength": 500
+        },
+        "items": {
+          "type": "array",
+          "description": "List of ordered food and beverage items"
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Food subtotal in UGX"
+        },
+        "grandTotal": {
+          "type": "number",
+          "description": "Total order amount including delivery in UGX"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["received", "preparing", "dispatched", "delivered", "cancelled"],
+          "description": "Live order progress status"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["cash", "airtel-money", "mtn-momo"],
+          "description": "Selected payment method"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when the order was placed"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last status update"
+        }
+      },
+      "required": ["id", "orderMode", "customerName", "customerPhone", "items", "subtotal", "grandTotal", "status", "paymentMethod", "createdAt"]
+    },
+    "CustomerReview": {
+      "title": "CustomerReview",
+      "description": "Customer ratings and testimonials for Papaz Spot dishes",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique review identifier",
+          "maxLength": 64
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer name or moniker",
+          "maxLength": 80
+        },
+        "dishName": {
+          "type": "string",
+          "description": "Dish being reviewed (e.g., Goat Luwombo, Special Rolex)",
+          "maxLength": 120
+        },
+        "rating": {
+          "type": "number",
+          "description": "Star rating from 1 to 5"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Review text or taste feedback",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of the review"
+        }
+      },
+      "required": ["id", "customerName", "rating", "comment", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Live and completed customer orders at Papaz Spot"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "CustomerReview",
+      "description": "Public customer feedback and dish reviews"
+    }
+  }
+}

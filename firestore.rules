@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny All Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint for Orders
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'orderMode', 'customerName', 'customerPhone', 'items', 'subtotal', 'grandTotal', 'status', 'paymentMethod', 'createdAt'])
+        && data.keys().hasOnly(['id', 'orderMode', 'customerName', 'customerPhone', 'tableNumber', 'deliveryAddress', 'deliveryZone', 'deliveryFee', 'notes', 'items', 'subtotal', 'grandTotal', 'status', 'paymentMethod', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id.size() <= 64
+        && data.orderMode in ['dine-in', 'takeaway', 'delivery']
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100
+        && data.customerPhone is string && data.customerPhone.size() >= 7 && data.customerPhone.size() <= 25
+        && (data.tableNumber == null || (data.tableNumber is string && data.tableNumber.size() <= 20))
+        && (data.deliveryAddress == null || (data.deliveryAddress is string && data.deliveryAddress.size() <= 250))
+        && (data.deliveryZone == null || (data.deliveryZone is string && data.deliveryZone.size() <= 100))
+        && (data.deliveryFee == null || (data.deliveryFee is number && data.deliveryFee >= 0))
+        && (data.notes == null || (data.notes is string && data.notes.size() <= 500))
+        && data.items is list && data.items.size() > 0 && data.items.size() <= 100
+        && data.subtotal is number && data.subtotal >= 0
+        && data.grandTotal is number && data.grandTotal >= 0
+        && data.status in ['received', 'preparing', 'dispatched', 'delivered', 'cancelled']
+        && data.paymentMethod in ['cash', 'airtel-money', 'mtn-momo']
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && (data.updatedAt == null || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Validation Blueprint for Customer Reviews
+    function isValidReview(data) {
+      return data.keys().hasAll(['id', 'customerName', 'rating', 'comment', 'createdAt'])
+        && data.keys().hasOnly(['id', 'customerName', 'dishName', 'rating', 'comment', 'createdAt'])
+        && data.id is string && data.id.size() <= 64
+        && data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 80
+        && (data.dishName == null || (data.dishName is string && data.dishName.size() <= 120))
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() >= 2 && data.comment.size() <= 500
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Orders Collection: Real-time Kitchen & Tracking
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId);
+      allow list: if true;
+      allow create: if isValidId(orderId) 
+                    && isValidOrder(incoming()) 
+                    && incoming().id == orderId;
+      allow update: if isValidId(orderId) 
+                    && isValidOrder(incoming())
+                    && incoming().id == existing().id
+                    && incoming().grandTotal == existing().grandTotal
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Customer Reviews Collection
+    match /reviews/{reviewId} {
+      allow read: if isValidId(reviewId) || true;
+      allow create: if isValidId(reviewId) 
+                    && isValidReview(incoming()) 
+                    && incoming().id == reviewId;
+      allow update, delete: if false;
+    }
+  }
+}

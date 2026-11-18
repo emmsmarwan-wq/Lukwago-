@@ -1,0 +1,6 @@
+{
+  "name": "Papaz Spot - Digital Food Menu",
+  "description": "Interactive HD digital menu for Papaz Spot with authentic Ugandan cuisine, updated prices, category filtering, bill calculator, and direct WhatsApp ordering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
